@@ -23,6 +23,7 @@ services:
       - NODE_ENV=production
     depends_on:
       - db
+      - redis
     networks:
       - web
 
@@ -36,6 +37,24 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - web
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - web
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    volumes:
+      - ./deploy/vps/nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - web
 

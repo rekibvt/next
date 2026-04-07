@@ -3,7 +3,8 @@
 
 DOMAIN {
   encode gzip zstd
-  reverse_proxy app:3000
+  # TLS terminator: Caddy proxies to nginx which handles app reverse-proxying
+  reverse_proxy nginx:80
   log {
     output file /data/access.log
   }

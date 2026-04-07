@@ -53,11 +53,15 @@ write_env_and_caddy() {
   cat > "$TARGET_DIR/app/.env" <<EOF
 DATABASE_URL="postgresql://postgres:${DB_PASSWORD}@db:5432/postgres?schema=public"
 NODE_ENV=production
+REDIS_URL="redis://redis:6379"
 EOF
 
   echo "Writing Caddyfile"
   mkdir -p "$TARGET_DIR/caddy"
   sed "s/DOMAIN/${DOMAIN}/g" "$TARGET_DIR/deploy/vps/Caddyfile" > "$TARGET_DIR/caddy/Caddyfile"
+  echo "Copying nginx.conf"
+  mkdir -p "$TARGET_DIR/deploy/vps"
+  cp "$TARGET_DIR/deploy/vps/nginx.conf" "$TARGET_DIR/deploy/vps/nginx.conf"
 }
 
 deploy_compose() {
