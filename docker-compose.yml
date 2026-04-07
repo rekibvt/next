@@ -1,0 +1,47 @@
+services:
+  web:
+    image: next-app-secure:latest
+    init: true
+    container_name: nextjs_web
+    ports:
+      - "3033:3000"
+    environment:
+      # Les variables d'environnement sont passées lors du déploiement
+      - NODE_ENV=production
+      # DATABASE_URL sera défini via les variables d'environnement du serveur
+    depends_on:
+      - db
+    networks:
+      - nexus-network
+    restart: unless-stopped
+    # Pas de volumes en production !
+
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    # NE PAS exposer le port en production !
+    # Garder le port INTERNE (5432) mais pas ouvert au réseau hôte
+    environment:
+      # Ces variables sont pour le développement SEULEMENT
+      # En production, utiliser des variables d'environnement sécurisées
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-mydb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nexus-network
+    restart: unless-stopped
+    # Limiter les ressources
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+volumes:
+  postgres_data:
+
+networks:
+  nexus-network:
+    driver: bridge

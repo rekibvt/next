@@ -1,14 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
 datasource db {
   provider = "postgresql"
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-// Garde tes modèles (User, etc.) en dessous
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?Ò
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
