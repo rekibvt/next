@@ -26,4 +26,4 @@ ENV HOSTNAME=0.0.0.0
 
 # 3. Utiliser la syntaxe "exec" (crochets) pour le CMD
 # On lance la migration PUIS le serveur
-CMD npx prisma migrate deploy && node server.js
+CMD ["node", "server.js"]
