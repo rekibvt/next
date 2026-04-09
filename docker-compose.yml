@@ -1,6 +1,7 @@
 services:
   web:
     image: next-app-secure:latest
+    build: .  # <--- CETTE LIGNE EST OBLIGATOIRE
     init: true
     container_name: nextjs_web
     ports:
