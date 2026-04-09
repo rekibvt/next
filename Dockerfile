@@ -4,14 +4,15 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 
-# 2. Étape du Build (C'est ici qu'on définit "builder")
 FROM node:20-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache openssl
 COPY . .
-# On récupère les node_modules de l'étape précédente
 COPY --from=dependencies /app/node_modules ./node_modules
+
+# FORCE LE BINAIRE ICI
 RUN npx prisma generate
+
 RUN npm run build
 
 # 3. Étape de Runtime (C'est ici que l'erreur se produit souvent)
