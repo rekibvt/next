@@ -63,14 +63,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, error: null });
 
   } catch (error: any) {
-    // Log l'erreur complète en développement/serveur seulement
-    if (process.env.NODE_ENV === 'development') {
-      console.error("❌ Erreur API Register :", error);
-    }
-    // Ne jamais révéler les détails d'erreur au client
-    return NextResponse.json(
-      { success: false, error: "Erreur serveur. Veuillez réessayer plus tard." },
-      { status: 500 }
-    );
-  }
+  // Affiche toujours l'erreur dans les logs Docker pour qu'on puisse réparer !
+  console.error("❌ ERREUR CRITIQUE API :", error); 
+  
+  return NextResponse.json(
+    { success: false, message: error.message },
+    { status: 500 }
+  );
+}
 }

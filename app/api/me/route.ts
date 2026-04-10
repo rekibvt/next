@@ -37,13 +37,12 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // Log l'erreur complète en développement/serveur seulement
-    if (process.env.NODE_ENV === 'development') {
-      console.error("❌ Erreur API /me :", error);
-    }
-    return NextResponse.json(
-      { success: false, user: null },
-      { status: 500 }
-    );
-  }
+  // Affiche toujours l'erreur dans les logs Docker pour qu'on puisse réparer !
+  console.error("❌ ERREUR CRITIQUE API :", error); 
+  
+  return NextResponse.json(
+    { success: false, message: error.message },
+    { status: 500 }
+  );
+}
 }
