@@ -2,10 +2,9 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  serverExternalPackages: ['@prisma/client', 'pg'],
-  // Headers de sécurité
+  // On retire serverExternalPackages temporairement pour laisser Next gérer Prisma
+  
   async headers() {
-    // Build headers list dynamically so we can only enable HSTS in production
     const headers = [] as Array<{ key: string; value: string }>
 
     if (process.env.NODE_ENV === 'production') {
