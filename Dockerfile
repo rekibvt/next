@@ -1,47 +1,44 @@
-# 1. Étape des dépendances
-FROM node:22-alpine AS dependencies
-WORKDIR /app
-RUN apk add --no-cache openssl
-COPY package*.json ./
-COPY prisma ./prisma/
-# Utilisation de ci pour une installation propre et stable
-RUN npm ci --legacy-peer-deps
-
-# 2. Étape de Build
+# 1. Étape de build
 FROM node:22-alpine AS builder
 WORKDIR /app
-RUN apk add --no-cache openssl
-COPY . .
-COPY --from=dependencies /app/node_modules ./node_modules
+# libc6-compat est requis pour Prisma sur Alpine
+RUN apk add --no-cache openssl libc6-compat
 
-# Génération du client Prisma et Build Next.js
+COPY package*.json ./
+COPY prisma ./prisma/
+RUN npm ci --legacy-peer-deps
+
+COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# 3. Étape de Runtime
-FROM node:22-alpine AS runtime
+# 2. Étape de runtime
+FROM node:22-alpine AS runner
 WORKDIR /app
-RUN apk add --no-cache openssl
+# On rajoute libc6-compat ici aussi pour le moteur Prisma (Engine)
+RUN apk add --no-cache openssl libc6-compat
 
-# Variables d'environnement pour la production
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
+ENV HOSTNAME="0.0.0.0"
 
-# Sécurité : on crée un utilisateur non-root
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Récupération des fichiers compilés (mode standalone)
+# Récupération du mode standalone
+COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Installation propre de Prisma pour le runtime (évite les modules manquants)
-RUN npm install prisma @prisma/client
+# On rapatrie les dossiers Prisma pour pouvoir faire le "migrate deploy"
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
 USER nextjs
 EXPOSE 3000
 
-# Exécution des migrations avant de lancer le serveur
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Commande de lancement
+# On utilise le binaire prisma copié pour appliquer les migrations sur 'postgres_db'
+CMD ["sh", "-c", "./node_modules/prisma/build/index.js migrate deploy && node server.js"]
