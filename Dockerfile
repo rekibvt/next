@@ -16,7 +16,7 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Réinstallation de Prisma CLI pour avoir la commande disponible
-RUN npm install -g prisma
+RUN npm install -g prisma@latest @prisma/client
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
